@@ -1,0 +1,21 @@
+# Android and Gradle build outputs
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+.DS_Store
+*.hprof
+
+# User Explicit Exclusions
+GreenTech_Phase3_Report/
+GreenTech_Phase3_Report
+operon/
+operon
+
+# Temporary files
+*.log
+*.tmp
+current_screen.png
+screen*.png
