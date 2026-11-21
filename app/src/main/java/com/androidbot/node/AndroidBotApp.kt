@@ -50,7 +50,7 @@ class AndroidBotApp : Application() {
     }
 
     companion object {
-        const val DEFAULT_TUNNEL_URL = "https://inkjet-project-belt-too.trycloudflare.com"
+        const val DEFAULT_TUNNEL_URL = "https://used-arnold-authentication-format.trycloudflare.com"
 
         lateinit var instance: AndroidBotApp
             private set

@@ -110,8 +110,19 @@ When testing on local Wi-Fi, the phone receives a local subnet address (e.g., `1
 2. **Carrier-Grade NAT (CGNAT):** Cellular carriers (e.g., Jio 5G, Airtel, Verizon) assign non-routable private addresses (RFC 6598 `100.64.0.0/10` or IPv6 CLAT `192.0.0.2`). Carrier firewalls strictly **drop all unsolicited inbound connections**.
 3. **Old Tunnel Flaw:** If Cloudflare was pointed at `http://<WIFI_LAN_IP>:8080`, dropping Wi-Fi resulted in **Error 502 Bad Gateway (Host Error)** because the PC origin could no longer route to the mobile device.
 
-### The Universal Bridge Solution
-PhoneNode solves this via ADB hardware loopback forwarding:
+### Dual Deployment Options
+
+#### 1. Standalone On-Device Tunnel (100% Untethered Mobile Data)
+The phone runs `cloudflared` (ARM64) natively on-device, establishing an outbound encrypted QUIC tunnel (UDP port 7844) directly to Cloudflare's Anycast edge:
+```bash
+# Push and execute on-device launcher (zero PC required once running)
+adb push start_phone_tunnel.sh /data/local/tmp/
+adb shell "chmod 755 /data/local/tmp/start_phone_tunnel.sh && /data/local/tmp/start_phone_tunnel.sh"
+```
+Because the connection originates *outbound* from the device, it completely circumvents cellular carrier firewalls (CGNAT) on 5G/4G networks with zero router configuration.
+
+#### 2. Development USB Loopback Bridge
+When plugged into a development machine:
 ```bash
 # 1. Forward TCP port 8080 over USB / ADB loopback
 adb forward tcp:8080 tcp:8080
@@ -120,11 +131,10 @@ adb forward tcp:8080 tcp:8080
 cloudflared tunnel --url http://127.0.0.1:8080
 ```
 
-#### Quick Start Scripts Included:
-- **Windows Batch:** Simply double-click `start_tunnel.bat`
-- **PowerShell:** Run `./start_tunnel.ps1`
-
-Because traffic is bridged through local USB loopback (`127.0.0.1:8080`), Cloudflare routes packets directly into the phone's Ktor server **regardless of whether the phone is on 5G Mobile Data, 4G, Wi-Fi, or has no internet connection of its own**.
+##### Quick Start Scripts Included:
+- **Phone Standalone:** `./start_phone_tunnel.sh`
+- **Windows Batch Bridge:** Simply double-click `start_tunnel.bat`
+- **PowerShell Bridge:** Run `./start_tunnel.ps1`
 
 ---
 
@@ -164,7 +174,7 @@ The embedded Ktor server exposes the following endpoints on port `8080`:
 
 ### Example Agent Request:
 ```bash
-curl -X POST https://inkjet-project-belt-too.trycloudflare.com/api/agent/run \
+curl -X POST https://used-arnold-authentication-format.trycloudflare.com/api/agent/run \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Read quarterly_report.txt and draft executive brief in executive_brief.md"}'
 ```
