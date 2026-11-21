@@ -3,43 +3,84 @@ package com.androidbot.node.util
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
+data class NetworkStatus(
+    val ipAddress: String,
+    val networkType: String,
+    val isCellular: Boolean,
+    val advice: String
+)
+
 object NetworkUtils {
 
-    fun getLocalIpAddress(): String {
+    fun getNetworkStatus(): NetworkStatus {
         try {
-            val interfaces = NetworkInterface.getNetworkInterfaces() ?: return "127.0.0.1"
+            val interfaces = NetworkInterface.getNetworkInterfaces() ?: return NetworkStatus(
+                ipAddress = "127.0.0.1",
+                networkType = "Loopback",
+                isCellular = false,
+                advice = "Localhost only"
+            )
+
+            var wifiIp: String? = null
+            var cellularIp: String? = null
+            var otherIp: String? = null
+
             for (intf in interfaces) {
-                // Ignore loopback and inactive interfaces
                 if (intf.isLoopback || !intf.isUp) continue
 
-                val addresses = intf.inetAddresses
-                for (addr in addresses) {
+                for (addr in intf.inetAddresses) {
                     if (!addr.isLoopbackAddress && addr is Inet4Address) {
                         val hostAddress = addr.hostAddress ?: continue
-                        // Prioritize Wi-Fi and hotspot interfaces
-                        if (intf.name.contains("wlan", ignoreCase = true) ||
-                            intf.name.contains("ap", ignoreCase = true) ||
-                            intf.name.contains("eth", ignoreCase = true)
-                        ) {
-                            return hostAddress
+                        val name = intf.name.lowercase()
+                        when {
+                            name.contains("wlan") || name.contains("ap") || name.contains("eth") -> {
+                                if (wifiIp == null) wifiIp = hostAddress
+                            }
+                            name.contains("rmnet") || name.contains("ccmni") || name.contains("pdp") -> {
+                                if (cellularIp == null) cellularIp = hostAddress
+                            }
+                            else -> {
+                                if (otherIp == null) otherIp = hostAddress
+                            }
                         }
                     }
                 }
             }
 
-            // Fallback: return first non-loopback IPv4
-            val allInterfaces = NetworkInterface.getNetworkInterfaces() ?: return "127.0.0.1"
-            for (intf in allInterfaces) {
-                if (intf.isLoopback || !intf.isUp) continue
-                for (addr in intf.inetAddresses) {
-                    if (!addr.isLoopbackAddress && addr is Inet4Address) {
-                        return addr.hostAddress ?: "127.0.0.1"
-                    }
-                }
+            if (wifiIp != null) {
+                return NetworkStatus(
+                    ipAddress = wifiIp,
+                    networkType = "Wi-Fi LAN",
+                    isCellular = false,
+                    advice = "Directly reachable on same local Wi-Fi subnet or via Cloudflare Tunnel."
+                )
+            } else if (cellularIp != null) {
+                return NetworkStatus(
+                    ipAddress = cellularIp,
+                    networkType = "Mobile Data (5G/4G CGNAT)",
+                    isCellular = true,
+                    advice = "Inbound ports blocked by cellular carrier (CGNAT). Use Cloudflare Tunnel or USB bridge."
+                )
+            } else if (otherIp != null) {
+                return NetworkStatus(
+                    ipAddress = otherIp,
+                    networkType = "Active Interface",
+                    isCellular = false,
+                    advice = "Connected via local network interface."
+                )
             }
         } catch (_: Exception) {
-            // Ignored
+            // Fallback
         }
-        return "127.0.0.1"
+        return NetworkStatus(
+            ipAddress = "127.0.0.1",
+            networkType = "Loopback (Offline)",
+            isCellular = false,
+            advice = "Connect to Wi-Fi or turn on Mobile Data with Tunnel."
+        )
+    }
+
+    fun getLocalIpAddress(): String {
+        return getNetworkStatus().ipAddress
     }
 }

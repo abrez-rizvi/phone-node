@@ -11,7 +11,7 @@
 **PhoneNode** repurposes an idle, retired, or active smartphone into a dual-purpose sovereign edge appliance:
 1. **Edge Network-Attached Storage (NAS):** High-throughput embedded HTTP server with RFC 7233 Partial Content (`HTTP 206`) range streaming for media seek, file management, and zero-buffering playback.
 2. **Onboard Autonomous ReAct Agent (ZeroClaw):** On-device autonomous reasoning runner powered by Groq LLM function calling (`openai/gpt-oss-120b`). Inspects, summarizes, and edits files directly in phone storage.
-3. **Public Access via Cloudflare Tunnel:** Instant HTTPS connectivity from anywhere in the world without router port-forwarding or dynamic DNS.
+3. **Universal Remote Access via Cloudflare Tunnel:** Instant HTTPS connectivity from anywhere in the world across Wi-Fi, 5G, and 4G Mobile Data with zero router port-forwarding or dynamic DNS.
 4. **Dual Interface:** Native OLED dark Jetpack Compose mobile client with floating pill navigation, alongside an offline single-page web portal.
 
 ---
@@ -46,7 +46,7 @@
       <td width="33%" align="center">
         <b>05. Node Engine Console</b><br>
         <img src="docs/screenshots/04_node_engine.png" alt="Node Engine Console" width="260"/>
-        <br><i>Ktor lifecycle, LAN/Cloudflare URLs & real-time log trace</i>
+        <br><i>Ktor lifecycle, Network type, LAN & Cloudflare Tunnel URLs</i>
       </td>
       <td width="33%" align="center">
         <b>Web Portal Frontend</b><br>
@@ -102,6 +102,32 @@
 
 ---
 
+## 🌐 Network Routing: Wi-Fi vs. Mobile Data (5G/4G CGNAT)
+
+### The Mobile Data Challenge
+When testing on local Wi-Fi, the phone receives a local subnet address (e.g., `192.168.1.63`). However, when switching to **Cellular / Mobile Data (5G/4G)**:
+1. **IP Migration:** The Wi-Fi interface (`wlan0`) disconnects, dropping the `192.168.x.x` address.
+2. **Carrier-Grade NAT (CGNAT):** Cellular carriers (e.g., Jio 5G, Airtel, Verizon) assign non-routable private addresses (RFC 6598 `100.64.0.0/10` or IPv6 CLAT `192.0.0.2`). Carrier firewalls strictly **drop all unsolicited inbound connections**.
+3. **Old Tunnel Flaw:** If Cloudflare was pointed at `http://<WIFI_LAN_IP>:8080`, dropping Wi-Fi resulted in **Error 502 Bad Gateway (Host Error)** because the PC origin could no longer route to the mobile device.
+
+### The Universal Bridge Solution
+PhoneNode solves this via ADB hardware loopback forwarding:
+```bash
+# 1. Forward TCP port 8080 over USB / ADB loopback
+adb forward tcp:8080 tcp:8080
+
+# 2. Expose local loopback directly via Cloudflare
+cloudflared tunnel --url http://127.0.0.1:8080
+```
+
+#### Quick Start Scripts Included:
+- **Windows Batch:** Simply double-click `start_tunnel.bat`
+- **PowerShell:** Run `./start_tunnel.ps1`
+
+Because traffic is bridged through local USB loopback (`127.0.0.1:8080`), Cloudflare routes packets directly into the phone's Ktor server **regardless of whether the phone is on 5G Mobile Data, 4G, Wi-Fi, or has no internet connection of its own**.
+
+---
+
 ## 🛠 Features
 
 ### 1. Photos & Albums Media Vault
@@ -113,16 +139,13 @@
 ### 2. ZeroClaw Autonomous Agent (ReAct)
 - Conversational chat UI with speech bubbles, thinking indicators, and timestamped telemetry.
 - Executes multi-turn missions using Groq's high-speed `openai/gpt-oss-120b` engine.
-- 4 Built-in Sandboxed Tools:
-  - `list_files(subfolder)`: Enumerates files and directory layout.
-  - `read_file(filename)`: Inspects text or code content safely.
-  - `write_file(filename, content)`: Saves structured reports, summaries, or data directly into storage.
-  - `search_content(query)`: High-speed keyword search across text documents.
+- 4 Sandboxed Tools: `list_files`, `read_file`, `write_file`, `search_content`.
 - 1-Tap Quick Action Chips: `[▶ Draft Executive Brief]`, `[▶ Energy Audit]`, `[▶ List Storage Files]`.
 
 ### 3. Remote Cloudflare Tunnel Integration
 - Connects the mobile node to the global internet via Cloudflare Quick Tunnel.
 - Enables public HTTPS access with zero firewall or router configuration.
+- In-app editable tunnel URL with 1-click clipboard copy.
 
 ---
 
@@ -141,37 +164,9 @@ The embedded Ktor server exposes the following endpoints on port `8080`:
 
 ### Example Agent Request:
 ```bash
-curl -X POST http://192.168.1.63:8080/api/agent/run \
+curl -X POST https://inkjet-project-belt-too.trycloudflare.com/api/agent/run \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Read quarterly_report.txt and draft executive brief in executive_brief.md"}'
-```
-
-### Example Agent Response:
-```json
-{
-  "success": true,
-  "turnsUsed": 3,
-  "finalAnswer": "The quarterly_report.txt was analyzed and an executive brief was written to executive_brief.md.",
-  "executionLog": [
-    "Mission started: 'Read quarterly_report.txt and draft executive brief in executive_brief.md'",
-    "Turn 1: Requesting inference from LLM",
-    "Tool Invocation: list_files",
-    "Tool Invocation: read_file",
-    "Tool Invocation: write_file",
-    "Mission completed in 3 turn(s)."
-  ],
-  "steps": [
-    { "tool": "list_files", "args": { "subfolder": "" } },
-    { "tool": "read_file", "args": { "filename": "quarterly_report.txt" } },
-    { "tool": "write_file", "args": { "filename": "executive_brief.md" } }
-  ],
-  "telemetry": {
-    "engine": "ZeroClaw",
-    "model": "GPT-OSS 120B",
-    "duration_seconds": "1.39",
-    "tokens_per_sec": "380"
-  }
-}
 ```
 
 ---
@@ -194,9 +189,9 @@ Output APK is located at: `app/build/outputs/apk/debug/app-debug.apk`
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### 3. Expose via Cloudflare Tunnel (Optional)
+### 3. Start Cloudflare Tunnel Bridge
 ```bash
-cloudflared tunnel --url http://<PHONE_LAN_IP>:8080
+start_tunnel.bat
 ```
 
 ---

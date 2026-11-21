@@ -15,6 +15,7 @@ import com.androidbot.node.storage.StorageUsage
 import com.androidbot.node.storage.TransferEvent
 import com.androidbot.node.storage.TransferTracker
 import com.androidbot.node.util.EventLogger
+import com.androidbot.node.util.NetworkStatus
 import com.androidbot.node.util.NetworkUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,8 +50,14 @@ class DashboardViewModel : ViewModel() {
     val isServerRunning: StateFlow<Boolean> = AndroidBotApp.instance.ktorServerManager.isRunning
     val serverPort: StateFlow<Int> = AndroidBotApp.instance.ktorServerManager.port
 
+    private val _networkStatus = MutableStateFlow(NetworkUtils.getNetworkStatus())
+    val networkStatus: StateFlow<NetworkStatus> = _networkStatus.asStateFlow()
+
     private val _localIp = MutableStateFlow(NetworkUtils.getLocalIpAddress())
     val localIp: StateFlow<String> = _localIp.asStateFlow()
+
+    private val _tunnelUrl = MutableStateFlow(AndroidBotApp.instance.getTunnelUrl())
+    val tunnelUrl: StateFlow<String> = _tunnelUrl.asStateFlow()
 
     private val _apiKey = MutableStateFlow(AndroidBotApp.instance.getGroqApiKey())
     val apiKey: StateFlow<String> = _apiKey.asStateFlow()
@@ -115,7 +122,16 @@ class DashboardViewModel : ViewModel() {
     }
 
     fun refreshIp() {
-        _localIp.value = NetworkUtils.getLocalIpAddress()
+        val status = NetworkUtils.getNetworkStatus()
+        _networkStatus.value = status
+        _localIp.value = status.ipAddress
+    }
+
+    fun updateTunnelUrl(newUrl: String) {
+        val clean = newUrl.trim()
+        _tunnelUrl.value = clean
+        AndroidBotApp.instance.setTunnelUrl(clean)
+        EventLogger.log("UI", "Cloudflare tunnel URL updated: $clean")
     }
 
     fun updateApiKey(newKey: String) {

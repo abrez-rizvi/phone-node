@@ -41,7 +41,17 @@ class AndroidBotApp : Application() {
         prefs.edit().putString("groq_api_key", key).apply()
     }
 
+    fun getTunnelUrl(): String {
+        return prefs.getString("tunnel_url", DEFAULT_TUNNEL_URL) ?: DEFAULT_TUNNEL_URL
+    }
+
+    fun setTunnelUrl(url: String) {
+        prefs.edit().putString("tunnel_url", url).apply()
+    }
+
     companion object {
+        const val DEFAULT_TUNNEL_URL = "https://inkjet-project-belt-too.trycloudflare.com"
+
         lateinit var instance: AndroidBotApp
             private set
     }
