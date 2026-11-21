@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PhoneNode // Sovereign Personal Cloud</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="./js/tailwind.min.js"></script>
+  <script src="./js/marked.min.js"></script>
+  <script src="./js/config.js"></script>
+  <script>
+    if (window.tailwind) {
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              zinc: {
+                950: '#09090b',
+                900: '#121215',
+                850: '#18181b',
+                800: '#27272a',
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-black text-zinc-100 min-h-screen flex flex-col font-sans select-none overflow-x-hidden">
+
+  <!-- TOP APP BAR -->
+  <header class="border-b border-zinc-850 bg-black/90 backdrop-blur sticky top-0 z-40 px-3 sm:px-6 py-2.5 flex flex-col gap-2">
+    <!-- Top Row: Brand & Status & Settings -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-zinc-900 border border-zinc-750 flex items-center justify-center font-mono font-bold text-xs text-white">
+          P
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs sm:text-sm font-semibold tracking-tight text-white">PhoneNode</span>
+            <span id="connStatusPill" class="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="connStatusText">online</span>
+            </span>
+          </div>
+          <div class="text-[10px] text-zinc-500 font-mono hidden sm:block">Sovereign Personal Cloud // Snapdragon 8+ Gen 1</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button onclick="openSettingsModal()" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 transition text-xs" title="Backend Server Settings">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+
+        <label for="fileUploadInput" class="cursor-pointer bg-white text-black hover:bg-zinc-200 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span id="uploadLabel">Upload</span>
+        </label>
+        <input type="file" id="fileUploadInput" class="hidden" onchange="uploadFile(event)">
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex items-center gap-1 border-t border-zinc-850/60 pt-2 overflow-x-auto custom-scroll">
+      <button onclick="switchTab('media')" id="tabBtn-media" class="nav-tab px-3 py-1 rounded-lg text-xs font-medium bg-zinc-800 text-white transition flex items-center gap-1.5">
+        <span>Media Vault</span>
+      </button>
+      <button onclick="switchTab('agent')" id="tabBtn-agent" class="nav-tab px-3 py-1 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5">
+        <span>ZeroClaw Agent</span>
+      </button>
+      <button onclick="switchTab('feed')" id="tabBtn-feed" class="nav-tab px-3 py-1 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5">
+        <span>Daily Feed</span>
+      </button>
+      <button onclick="switchTab('console')" id="tabBtn-console" class="nav-tab px-3 py-1 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5">
+        <span>Device Console</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 1: MEDIA VAULT -->
+  <!-- ========================================================================= -->
+  <div id="tabContent-media" class="tab-pane flex-1 flex flex-col">
+    <!-- Filter bar -->
+    <section class="max-w-7xl mx-auto w-full px-3 sm:px-8 pt-4 pb-2">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-zinc-850">
+        <!-- Breadcrumbs & Category Pills -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="clearFolderFilter()" id="btnBreadcrumbAll" class="text-xs font-medium text-white hover:text-zinc-300 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800">
+            <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span>All Media</span>
+          </button>
+          <span id="breadcrumbFolderSeparator" class="text-zinc-600 hidden">/</span>
+          <span id="breadcrumbFolderName" class="text-xs font-semibold text-white hidden px-2 py-0.5 rounded bg-zinc-800"></span>
+
+          <div class="flex items-center gap-1 ml-1 overflow-x-auto custom-scroll py-0.5">
+            <button onclick="filterCategory('all')" id="pill-all" class="category-pill text-[11px] font-medium px-2.5 py-1 rounded-lg bg-zinc-800 text-white transition">All (<span id="count-all">0</span>)</button>
+            <button onclick="filterCategory('videos')" id="pill-videos" class="category-pill text-[11px] font-medium px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Videos (<span id="count-videos">0</span>)</button>
+            <button onclick="filterCategory('photos')" id="pill-photos" class="category-pill text-[11px] font-medium px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Photos (<span id="count-photos">0</span>)</button>
+            <button onclick="filterCategory('documents')" id="pill-documents" class="category-pill text-[11px] font-medium px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Documents (<span id="count-documents">0</span>)</button>
+            <button onclick="filterCategory('reports')" id="pill-reports" class="category-pill text-[11px] font-medium px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Reports (<span id="count-reports">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Search & Refresh -->
+        <div class="flex items-center gap-2">
+          <div class="relative w-full sm:w-60">
+            <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="searchInput" oninput="filterGrid()" placeholder="Search media..." class="w-full bg-zinc-900 border border-zinc-800 focus:border-zinc-600 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 outline-none transition">
+          </div>
+          <button onclick="fetchFiles()" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 transition" title="Refresh files">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto w-full px-3 sm:px-8 py-3 flex-1 space-y-8">
+      <!-- Section 1: Recent Media -->
+      <section id="recentSection">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs sm:text-sm font-semibold text-white tracking-tight">Recent Media</h2>
+            <span class="text-[10px] font-mono text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">Latest</span>
+          </div>
+        </div>
+        <div id="recentGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3"></div>
+      </section>
+
+      <!-- Section 2: Folders -->
+      <section id="foldersSection">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs sm:text-sm font-semibold text-white tracking-tight">Storage Folders</h2>
+          <span class="text-xs text-zinc-500 font-mono" id="foldersCountBadge">0 folders</span>
+        </div>
+        <div id="foldersGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3"></div>
+      </section>
+
+      <!-- Section 3: Folder Contents -->
+      <section id="folderContentsSection" class="hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <button onclick="clearFolderFilter()" class="text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center gap-1 transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              <span>Back to All</span>
+            </button>
+            <h2 id="activeFolderHeading" class="text-sm font-semibold text-white tracking-tight">Folder</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 flex items-center gap-1">
+              <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              <span>Newest First</span>
+            </span>
+            <span id="activeFolderCount" class="text-xs text-zinc-500 font-mono">0 items</span>
+          </div>
+        </div>
+        <div id="folderItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 2: ZEROCLAW AGENT -->
+  <!-- ========================================================================= -->
+  <div id="tabContent-agent" class="tab-pane hidden flex-1 flex flex-col md:flex-row min-h-[calc(100vh-100px)]">
+    <!-- Chat Sessions Sidebar -->
+    <aside id="agentSidebar" class="w-full md:w-64 border-b md:border-b-0 md:border-r border-zinc-850 bg-zinc-950/80 p-3 flex flex-col gap-3 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-semibold text-zinc-400 uppercase tracking-wider">Conversations</span>
+        <button onclick="createNewAgentSession()" class="px-2 py-1 bg-white text-black hover:bg-zinc-200 text-xs font-medium rounded-md transition flex items-center gap-1">
+          <span>+ New Chat</span>
+        </button>
+      </div>
+      <div id="agentSessionsList" class="flex-1 overflow-y-auto space-y-1 custom-scroll max-h-40 md:max-h-none">
+        <div class="text-[11px] font-mono text-zinc-500 p-2">Loading sessions...</div>
+      </div>
+      <div class="pt-2 border-t border-zinc-850 flex items-center justify-between text-[10px] text-zinc-500 font-mono">
+        <span>Engine: ZeroClaw</span>
+        <button onclick="clearAllAgentHistory()" class="hover:text-red-400 transition">Clear All</button>
+      </div>
+    </aside>
+
+    <!-- Main Agent Interaction View -->
+    <main class="flex-1 flex flex-col bg-black min-w-0">
+      <div class="px-4 py-2.5 border-b border-zinc-850 flex items-center justify-between bg-zinc-950/40">
+        <div class="flex items-center gap-2 truncate">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="agentActiveChatTitle" class="text-xs font-semibold text-white truncate">Autonomous Mission</span>
+        </div>
+        <div class="text-[10px] font-mono text-zinc-400 flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800">POST /api/agent/run</span>
+        </div>
+      </div>
+
+      <!-- Chat Feed -->
+      <div id="agentChatFeed" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scroll min-h-[350px]">
+        <!-- Welcome Prompt -->
+        <div class="max-w-2xl mx-auto py-8 text-center space-y-3">
+          <div class="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-xl">
+            ⚡
+          </div>
+          <h2 class="text-base font-semibold text-white">ZeroClaw Autonomous Agent</h2>
+          <p class="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+            Execute autonomous missions across local sovereign storage. The agent inspects files, summarizes data, runs analysis, and writes outputs directly to storage.
+          </p>
+          <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <button onclick="populateAgentPrompt('Read quarterly_report.txt and draft executive brief in executive_brief.md')" class="text-[11px] font-mono bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg transition">
+              Draft Executive Brief
+            </button>
+            <button onclick="populateAgentPrompt('Read annual_energy_savings_audit.md and summarize cumulative power savings of PhoneNode vs a 48W x86 NAS in energy_summary.md.')" class="text-[11px] font-mono bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg transition">
+              Energy Savings Audit
+            </button>
+            <button onclick="populateAgentPrompt('List all files in sovereign storage and verify backup integrity.')" class="text-[11px] font-mono bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg transition">
+              Audit Vault Files
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer Input -->
+      <div class="p-3 sm:p-4 border-t border-zinc-850 bg-zinc-950/90">
+        <div class="max-w-4xl mx-auto space-y-2">
+          <!-- Attached files preview -->
+          <div id="agentAttachedChips" class="flex flex-wrap gap-1.5 hidden"></div>
+
+          <div class="relative flex items-center bg-zinc-900 border border-zinc-800 focus-within:border-zinc-600 rounded-xl overflow-hidden transition">
+            <textarea id="agentPromptInput" rows="1" placeholder="Instruct the agent (e.g. 'Read quarterly_report.txt and draft executive brief in executive_brief.md')..." class="w-full bg-transparent px-3.5 py-3 text-xs sm:text-sm text-white placeholder-zinc-500 outline-none resize-none max-h-32 custom-scroll" onkeydown="handleAgentKeydown(event)"></textarea>
+            <div class="flex items-center gap-1.5 pr-2 flex-shrink-0">
+              <button onclick="runAgentMission()" id="agentRunBtn" class="bg-white text-black hover:bg-zinc-200 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                <span id="agentRunBtnText">Run</span>
+                <svg id="agentRunIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-[10px] text-zinc-500 font-mono px-1">
+            <span>Press Enter to run • Shift+Enter for newline</span>
+            <span>Endpoint: POST /api/agent/run</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 3: DAILY FEED -->
+  <!-- ========================================================================= -->
+  <div id="tabContent-feed" class="tab-pane hidden flex-1 flex flex-col max-w-3xl mx-auto w-full p-3 sm:p-6 space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-zinc-850">
+      <div>
+        <h2 class="text-sm font-semibold text-white">Daily Tasks & Telemetry Feed</h2>
+        <p class="text-xs text-zinc-500 font-mono">Autonomous daily briefings and audit telemetry</p>
+      </div>
+      <button onclick="fetchFeed()" class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 hover:text-white transition flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span>Refresh</span>
+      </button>
+    </div>
+    <div id="feedList" class="space-y-3">
+      <div class="text-center py-12 text-xs text-zinc-500 font-mono">Loading feed stream...</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 4: PHONE CONSOLE -->
+  <!-- ========================================================================= -->
+  <div id="tabContent-console" class="tab-pane hidden flex-1 flex flex-col p-3 sm:p-6 max-w-5xl mx-auto w-full space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-zinc-850">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+        <h2 class="text-sm font-semibold tracking-wider text-white">PHONE CONSOLE DASHBOARD</h2>
+        <span class="text-[10px] px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono">NOTHING PHONE (2)</span>
+      </div>
+      <span id="consoleWsStatus" class="text-xs font-mono text-emerald-400">Connected</span>
+    </div>
+
+    <!-- 4 Telemetry Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+      <div class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-850">
+        <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between font-mono">
+          <span>CPU LOAD</span>
+          <span class="text-zinc-600">8 Cores</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="telCpu" class="text-2xl font-bold text-white font-mono">24.5</span>
+          <span class="text-xs text-zinc-500 font-mono">%</span>
+        </div>
+        <div class="w-full bg-zinc-900 h-1 rounded-full mt-2 overflow-hidden">
+          <div id="telCpuBar" class="bg-white h-full w-[24%] transition-all duration-500"></div>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-850">
+        <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between font-mono">
+          <span>TEMPERATURE</span>
+          <span class="text-emerald-400 text-[9px]">Normal</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="telTemp" class="text-2xl font-bold text-white font-mono">34.2</span>
+          <span class="text-xs text-zinc-500 font-mono">°C</span>
+        </div>
+        <div class="text-[10px] text-zinc-600 mt-2 font-mono">Thermal state nominal</div>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-850">
+        <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between font-mono">
+          <span>BATTERY UPS</span>
+          <span class="text-zinc-400 text-[9px]">Charging</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="telBat" class="text-2xl font-bold text-white font-mono">86</span>
+          <span class="text-xs text-zinc-500 font-mono">%</span>
+        </div>
+        <div class="text-[10px] text-zinc-600 mt-2 font-mono">4700 mAh Internal UPS</div>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-850">
+        <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between font-mono">
+          <span>STREAM SPEED</span>
+          <span class="text-zinc-500 text-[9px]">HTTP 206</span>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="telSpeed" class="text-2xl font-bold text-white font-mono">0.0</span>
+          <span class="text-xs text-zinc-500 font-mono">MB/s</span>
+        </div>
+        <div class="text-[10px] text-zinc-600 mt-2 font-mono truncate">Dual-Aspect Range Ready</div>
+      </div>
+    </div>
+
+    <!-- Live Activity Log Stream -->
+    <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-850 flex-1 flex flex-col min-h-[300px]">
+      <div class="flex items-center justify-between pb-2 border-b border-zinc-800/80 mb-2.5">
+        <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-mono font-medium">Activity Stream</span>
+        <span class="text-[10px] font-mono text-zinc-500">Live Hardware Feed</span>
+      </div>
+      <div id="consoleLogStream" class="flex-1 overflow-y-auto space-y-1.5 text-[11px] font-mono pr-1 custom-scroll">
+        <div class="text-zinc-600">[00:00:00] PhoneNode Console active. Listening on WebSocket...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS: VIDEO, PHOTO LIGHTBOX, DOCUMENT VIEWER, SETTINGS -->
+  <!-- ========================================================================= -->
+
+  <!-- VIDEO MODAL -->
+  <div id="videoModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 hidden flex flex-col justify-center items-center p-2 sm:p-4" onclick="closeVideoModal()">
+    <div id="videoModalCard" class="transition-all duration-300 w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]" onclick="event.stopPropagation()">
+      <div class="px-4 py-3 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900 flex-shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
+          <span id="videoModalTitle" class="text-xs sm:text-sm font-sans font-medium text-white truncate max-w-[200px] sm:max-w-md">video.mp4</span>
+          <span id="videoAspectBadge" class="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 flex-shrink-0">Stream</span>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <a id="videoDownloadBtn" href="#" download class="text-xs text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-750 transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span class="hidden sm:inline">Download</span>
+          </a>
+          <button onclick="closeVideoModal()" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center justify-center text-sm" title="Close (Esc)">✕</button>
+        </div>
+      </div>
+      <div id="videoCanvasContainer" class="relative bg-black flex items-center justify-center overflow-hidden flex-1 min-h-[220px]" style="max-height: calc(92vh - 120px);">
+        <video id="theaterPlayer" controls preload="metadata" playsinline class="max-w-full max-h-[68vh] w-auto h-auto object-contain block mx-auto focus:outline-none">
+          Your browser does not support HTML5 video.
+        </video>
+      </div>
+      <div class="px-4 py-2.5 bg-zinc-950 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-zinc-400 font-mono flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px]">
+          <span id="videoModalSize" class="text-zinc-200 font-medium">-- MB</span>
+          <span class="text-zinc-600">•</span>
+          <span id="videoModalDate" class="text-zinc-400">--</span>
+          <span class="text-zinc-600">•</span>
+          <span id="videoModalVault" class="text-zinc-400">media/Videos/</span>
+          <span class="text-zinc-600 hidden sm:inline">•</span>
+          <span class="text-emerald-400 hidden sm:inline">HTTP 206 Dual-Aspect Streamer</span>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-auto">
+          <button onclick="seekVideo(-10)" class="text-[11px] text-zinc-400 hover:text-white px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 transition">-10s</button>
+          <button onclick="seekVideo(10)" class="text-[11px] text-zinc-400 hover:text-white px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 transition">+10s</button>
+          <button onclick="toggleVideoPlaybackRate()" id="speedBtn" class="text-[11px] text-zinc-300 hover:text-white px-2 py-0.5 rounded bg-zinc-800 transition">1x</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHOTO LIGHTBOX -->
+  <div id="imageModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 hidden flex flex-col justify-between items-center p-2 sm:p-4" onclick="closeImageModal()">
+    <div class="w-full max-w-5xl flex items-center justify-between py-2 px-3 bg-zinc-900/90 backdrop-blur border border-zinc-800 rounded-xl text-xs font-mono text-zinc-400 z-10 flex-shrink-0" onclick="event.stopPropagation()">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
+        <span id="imageModalTitle" class="truncate font-sans font-medium text-white text-xs sm:text-sm max-w-[200px] sm:max-w-md">image.jpg</span>
+        <span id="imageModalCounter" class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 hidden sm:inline-block">1 of 1</span>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <a id="imageRawLink" href="#" target="_blank" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition text-xs flex items-center gap-1" title="Open full resolution">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          <span class="hidden sm:inline">Raw</span>
+        </a>
+        <a id="imageDownloadBtn" href="#" download class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white transition text-xs flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span class="hidden sm:inline">Download</span>
+        </a>
+        <button onclick="closeImageModal()" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center justify-center text-sm" title="Close (Esc)">✕</button>
+      </div>
+    </div>
+    <div class="relative w-full max-w-5xl flex-1 flex items-center justify-center my-2 sm:my-3 min-h-0" onclick="event.stopPropagation()">
+      <button id="imgPrevBtn" onclick="prevImage()" class="absolute left-2 sm:left-4 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-zinc-800 text-white border border-zinc-700 backdrop-blur-md flex items-center justify-center transition shadow-xl hover:scale-105" title="Previous Image (←)">
+        <svg class="w-5 h-5 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="w-full h-full flex items-center justify-center overflow-hidden">
+        <img id="imageModalSrc" src="" alt="Photo" class="max-w-full max-h-[66vh] sm:max-h-[70vh] w-auto h-auto object-contain rounded-lg shadow-2xl transition-all duration-200">
+      </div>
+      <button id="imgNextBtn" onclick="nextImage()" class="absolute right-2 sm:right-4 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-zinc-800 text-white border border-zinc-700 backdrop-blur-md flex items-center justify-center transition shadow-xl hover:scale-105" title="Next Image (→)">
+        <svg class="w-5 h-5 -mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="w-full max-w-5xl bg-zinc-900/90 backdrop-blur border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-400 flex-shrink-0 z-10" onclick="event.stopPropagation()">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 text-center sm:text-left">
+        <div class="flex flex-col">
+          <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Dimensions</span>
+          <span id="imageMetaDim" class="text-zinc-200 font-medium text-xs mt-0.5 truncate">--</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">File Size</span>
+          <span id="imageMetaSize" class="text-zinc-200 font-medium text-xs mt-0.5 truncate">--</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Date Added</span>
+          <span id="imageMetaDate" class="text-zinc-200 font-medium text-xs mt-0.5 truncate">--</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Vault Location</span>
+          <span id="imageMetaLocation" class="text-zinc-200 font-medium text-xs mt-0.5 truncate">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCUMENT READER MODAL -->
+  <div id="docModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex justify-center items-center p-2 sm:p-4" onclick="closeDocModal()">
+    <div class="max-w-3xl w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[88vh]" onclick="event.stopPropagation()">
+      <div class="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span id="docModalTitle" class="text-xs font-mono font-medium text-white truncate">document.txt</span>
+          <span id="docTypeBadge" class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">DOC</span>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button id="docToggleFormatBtn" onclick="toggleDocFormat()" class="text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 transition">Raw</button>
+          <a id="docDownloadBtn" href="#" download class="text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 transition">Download</a>
+          <button onclick="closeDocModal()" class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition">✕</button>
+        </div>
+      </div>
+      <div id="docModalContent" class="p-6 overflow-y-auto custom-scroll text-xs text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap flex-1 bg-zinc-950/60"></div>
+    </div>
+  </div>
+
+  <!-- BACKEND CONFIGURATION MODAL -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex justify-center items-center p-4" onclick="closeSettingsModal()">
+    <div class="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl p-5 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <h3 class="text-sm font-semibold text-white">Backend Server Settings</h3>
+        <button onclick="closeSettingsModal()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <p class="text-xs text-zinc-400 leading-relaxed">
+        Configure the backend URL when running inside an Android WebView (<code class="text-sky-400">file:///android_asset/</code>) or connecting to a custom port.
+      </p>
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-mono text-zinc-400 uppercase">API Base URL</label>
+        <input type="text" id="apiBaseInput" placeholder="http://localhost:8000" class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-600 rounded-lg px-3 py-2 text-xs font-mono text-white outline-none">
+        <span class="text-[10px] text-zinc-500 font-mono">Leave empty for relative root (/api/...) in standard web hosting.</span>
+      </div>
+      <div class="flex items-center justify-between pt-2">
+        <button onclick="testBackendConnection()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-mono text-zinc-300 transition">Test Connection</button>
+        <div class="flex items-center gap-2">
+          <button onclick="resetBackendSettings()" class="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white transition">Reset</button>
+          <button onclick="saveBackendSettings()" class="px-3 py-1.5 rounded-lg bg-white text-black hover:bg-zinc-200 text-xs font-semibold transition">Save</button>
+        </div>
+      </div>
+      <div id="backendTestResult" class="text-[11px] font-mono hidden pt-1"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-zinc-900 py-3 px-4 sm:px-8 mt-auto bg-black">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-zinc-500 font-mono">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>Host: Nothing Phone (2) • Snapdragon 8+ Gen 1</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="liveStorageSummary">-- files</span>
+        <span>•</span>
+        <span id="liveChunkStat">HTTP 206 Streamer</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // Global State
+    let allFiles = [];
+    let allFolders = [];
+    let currentFolder = null;
+    let currentCategory = 'all';
+    let currentGalleryImages = [];
+    let currentImageIndex = -1;
+    let playbackRates = [1.0, 1.25, 1.5, 2.0];
+    let currentRateIdx = 0;
+    let rawDocContent = '';
+    let isDocMarkdown = false;
+    let docShowingRaw = false;
+
+    // Agent State
+    let currentAgentSessionId = null;
+    let agentSessionsList = [];
+
+    // Console State
+    let consoleWs = null;
+
+    // TAB SWITCHING
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(el => {
+        el.classList.remove('bg-zinc-800', 'text-white');
+        el.classList.add('text-zinc-400');
+      });
+
+      const pane = document.getElementById(`tabContent-${tabName}`);
+      const btn = document.getElementById(`tabBtn-${tabName}`);
+      if (pane) pane.classList.remove('hidden');
+      if (btn) {
+        btn.classList.add('bg-zinc-800', 'text-white');
+        btn.classList.remove('text-zinc-400');
+      }
+
+      window.location.hash = tabName;
+
+      if (tabName === 'media') {
+        fetchFiles();
+      } else if (tabName === 'agent') {
+        loadAgentSessions();
+      } else if (tabName === 'feed') {
+        fetchFeed();
+      } else if (tabName === 'console') {
+        initConsole();
+      }
+    }
+
+    // -------------------------------------------------------------
+    // API: GET /api/files (Media Files & Folders)
+    // -------------------------------------------------------------
+    async function fetchFiles() {
+      try {
+        const res = await fetch(apiUrl('/api/files'));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        
+        let rawFiles = [];
+        if (Array.isArray(data)) {
+          rawFiles = data;
+        } else if (data.files && Array.isArray(data.files)) {
+          rawFiles = data.files;
+        }
+        allFolders = data.folders || [];
+
+        // Normalize files
+        allFiles = rawFiles.map(normalizeFile);
+
+        // Auto-extract folders if missing
+        if (!allFolders.length) {
+          const folderSet = new Set(allFiles.map(f => f.folder).filter(Boolean));
+          allFolders = Array.from(folderSet).map(name => ({
+            name,
+            file_count: allFiles.filter(f => f.folder === name).length
+          }));
+        }
+
+        updateCounts();
+        renderLayout();
+        updateConnectionStatus(true);
+      } catch (err) {
+        console.warn('[PhoneNode] fetchFiles error:', err);
+        updateConnectionStatus(false);
+      }
+    }
+
+    function normalizeFile(f) {
+      const name = f.name || f.filename || (f.path ? f.path.split('/').pop() : 'file');
+      const ext = f.extension || ('.' + name.split('.').pop().toLowerCase());
+      const is_video = f.is_video !== undefined ? f.is_video : /\.(mp4|webm|mkv|mov|avi)$/i.test(name);
+      const is_image = f.is_image !== undefined ? f.is_image : /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(name);
+      const is_text = f.is_text !== undefined ? f.is_text : /\.(txt|md|json|csv|log|yaml|yml)$/i.test(name);
+      const rel_path = f.rel_path || f.path || name;
+      const folder = f.folder || (rel_path.includes('/') ? rel_path.split('/')[0] : 'Media');
+      const size_formatted = f.size_formatted || formatBytes(f.size_bytes || f.size || 0);
+
+      return {
+        ...f,
+        name,
+        rel_path,
+        folder,
+        extension: ext,
+        is_video,
+        is_image,
+        is_text,
+        size_formatted,
+        modified: f.modified || f.date || 'Recent',
+        modified_ts: f.modified_ts || 0,
+        width: f.width || null,
+        height: f.height || null,
+        is_portrait: f.is_portrait || false
+      };
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+    }
+
+    function updateCounts() {
+      const totalBytes = allFiles.reduce((acc, f) => acc + (f.size_bytes || 0), 0);
+      const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
+      const summaryEl = document.getElementById('liveStorageSummary');
+      if (summaryEl) summaryEl.innerText = `${allFiles.length} files • ${totalMb} MB`;
+
+      const vCount = allFiles.filter(f => f.is_video || (f.folder && f.folder.toLowerCase() === 'videos')).length;
+      const pCount = allFiles.filter(f => f.is_image || (f.folder && f.folder.toLowerCase() === 'photos')).length;
+      const dCount = allFiles.filter(f => f.is_text || (f.folder && f.folder.toLowerCase() === 'documents')).length;
+      const rCount = allFiles.filter(f => (f.folder && f.folder.toLowerCase() === 'reports')).length;
+
+      document.getElementById('count-all').innerText = allFiles.length;
+      document.getElementById('count-videos').innerText = vCount;
+      document.getElementById('count-photos').innerText = pCount;
+      document.getElementById('count-documents').innerText = dCount;
+      document.getElementById('count-reports').innerText = rCount;
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.category-pill').forEach(btn => {
+        btn.classList.remove('bg-zinc-800', 'text-white');
+        btn.classList.add('text-zinc-400');
+      });
+      const activeBtn = document.getElementById(`pill-${cat}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-zinc-400');
+        activeBtn.classList.add('bg-zinc-800', 'text-white');
+      }
+
+      if (cat === 'all') currentFolder = null;
+      else if (cat === 'videos') currentFolder = 'Videos';
+      else if (cat === 'photos') currentFolder = 'Photos';
+      else if (cat === 'documents') currentFolder = 'Documents';
+      else if (cat === 'reports') currentFolder = 'Reports';
+
+      renderLayout();
+    }
+
+    function clearFolderFilter() {
+      currentFolder = null;
+      currentCategory = 'all';
+      filterCategory('all');
+    }
+
+    function openFolder(folderName) {
+      currentFolder = folderName;
+      renderLayout();
+    }
+
+    function renderLayout() {
+      if (currentFolder) {
+        document.getElementById('recentSection').classList.add('hidden');
+        document.getElementById('foldersSection').classList.add('hidden');
+        document.getElementById('folderContentsSection').classList.remove('hidden');
+
+        document.getElementById('breadcrumbFolderSeparator').classList.remove('hidden');
+        const folderNameEl = document.getElementById('breadcrumbFolderName');
+        folderNameEl.classList.remove('hidden');
+        folderNameEl.innerText = currentFolder;
+        document.getElementById('activeFolderHeading').innerText = currentFolder;
+        document.getElementById('uploadLabel').innerText = `Upload to ${currentFolder}`;
+
+        renderFolderItems();
+      } else {
+        document.getElementById('recentSection').classList.remove('hidden');
+        document.getElementById('foldersSection').classList.remove('hidden');
+        document.getElementById('folderContentsSection').classList.add('hidden');
+
+        document.getElementById('breadcrumbFolderSeparator').classList.add('hidden');
+        document.getElementById('breadcrumbFolderName').classList.add('hidden');
+        document.getElementById('uploadLabel').innerText = 'Upload';
+
+        renderRecentFiles();
+        renderFolders();
+      }
+    }
+
+    function renderRecentFiles() {
+      const container = document.getElementById('recentGrid');
+      container.innerHTML = '';
+
+      const recents = [...allFiles].sort((a, b) => (b.modified_ts || 0) - (a.modified_ts || 0)).slice(0, 6);
+
+      if (recents.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-zinc-500 font-mono">No files uploaded yet.</div>`;
+        return;
+      }
+
+      recents.forEach(file => {
+        const card = document.createElement('div');
+        if (file.is_video) {
+          card.className = 'group relative aspect-square rounded-xl overflow-hidden bg-black border border-zinc-800 hover:border-zinc-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg select-none';
+          card.onclick = () => openVideoModal(file);
+          card.innerHTML = `
+            <video src="${apiUrl('/api/stream/' + file.rel_path)}#t=0.5" preload="metadata" muted class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none" style="object-position: center ${file.is_portrait ? '18%' : 'center'};"></video>
+            <div class="absolute inset-0 bg-black/25 group-hover:bg-black/40 transition-colors"></div>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black transition duration-200 shadow-md">
+                <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+            <div class="absolute bottom-2 left-2 pointer-events-none">
+              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-zinc-300 border border-white/10">${file.is_portrait ? '📱 9:16' : '🎬 16:9'}</span>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-2.5 pointer-events-none">
+              <span class="text-[11px] font-medium text-white truncate drop-shadow">${file.name}</span>
+            </div>
+          `;
+        } else if (file.is_image) {
+          card.className = 'group relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg select-none';
+          card.onclick = () => openImageModalForFile(file, recents.filter(f => f.is_image));
+          card.innerHTML = `
+            <img src="${apiUrl('/api/files/' + file.rel_path)}" alt="${file.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-2.5 pointer-events-none">
+              <span class="text-[11px] font-medium text-white truncate drop-shadow">${file.name}</span>
+            </div>
+          `;
+        } else {
+          card.className = 'group relative aspect-square rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 p-3 flex flex-col justify-between cursor-pointer transition select-none';
+          card.onclick = () => openDocModal(file.rel_path);
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">${file.extension.replace('.', '')}</span>
+            </div>
+            <div>
+              <div class="text-[11px] font-medium text-white truncate" title="${file.name}">${file.name}</div>
+              <div class="text-[10px] text-zinc-500 font-mono mt-0.5">${file.size_formatted}</div>
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      });
+    }
+
+    function renderFolders() {
+      const container = document.getElementById('foldersGrid');
+      container.innerHTML = '';
+      document.getElementById('foldersCountBadge').innerText = `${allFolders.length} folders`;
+
+      if (allFolders.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-zinc-500 font-mono">No folders detected.</div>`;
+        return;
+      }
+
+      allFolders.forEach(folder => {
+        const card = document.createElement('div');
+        card.className = 'group p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-850/80 transition cursor-pointer flex items-center justify-between gap-3 select-none';
+        card.onclick = () => openFolder(folder.name);
+        card.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-amber-400 group-hover:scale-105 transition flex-shrink-0">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+            </div>
+            <div class="truncate">
+              <div class="text-xs font-semibold text-white group-hover:text-amber-300 transition truncate">${folder.name}</div>
+              <div class="text-[10px] text-zinc-500 font-mono mt-0.5">${folder.file_count || 0} items</div>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-zinc-600 group-hover:text-zinc-300 transition flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderFolderItems() {
+      const container = document.getElementById('folderItemsGrid');
+      container.innerHTML = '';
+
+      let items = [];
+      if (currentCategory === 'photos' || (currentFolder && currentFolder.toLowerCase() === 'photos')) {
+        items = allFiles.filter(f => f.is_image || (f.folder && f.folder.toLowerCase() === 'photos'));
+      } else if (currentCategory === 'videos' || (currentFolder && currentFolder.toLowerCase() === 'videos')) {
+        items = allFiles.filter(f => f.is_video || (f.folder && f.folder.toLowerCase() === 'videos'));
+      } else if (currentCategory === 'documents' || (currentFolder && currentFolder.toLowerCase() === 'documents')) {
+        items = allFiles.filter(f => f.is_text || (f.folder && f.folder.toLowerCase() === 'documents'));
+      } else if (currentCategory === 'reports' || (currentFolder && currentFolder.toLowerCase() === 'reports')) {
+        items = allFiles.filter(f => (f.folder && f.folder.toLowerCase() === 'reports') || f.name.toLowerCase().includes('report') || f.name.toLowerCase().includes('brief'));
+      } else if (currentFolder) {
+        items = allFiles.filter(f => f.folder && f.folder.toLowerCase() === currentFolder.toLowerCase());
+      } else {
+        items = [...allFiles];
+      }
+
+      items.sort((a, b) => (b.modified_ts || 0) - (a.modified_ts || 0));
+
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (query) items = items.filter(f => f.name.toLowerCase().includes(query));
+
+      document.getElementById('activeFolderCount').innerText = `${items.length} items`;
+
+      if (items.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-16 text-center text-zinc-500 text-xs font-mono">No files in this folder.</div>`;
+        return;
+      }
+
+      const imageItems = items.filter(f => f.is_image);
+
+      items.forEach(file => {
+        const card = document.createElement('div');
+        if (file.is_video) {
+          card.className = 'group relative aspect-square rounded-xl overflow-hidden bg-black border border-zinc-800 hover:border-zinc-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg select-none';
+          card.onclick = () => openVideoModal(file);
+          card.innerHTML = `
+            <video src="${apiUrl('/api/stream/' + file.rel_path)}#t=0.5" preload="metadata" muted class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none" style="object-position: center ${file.is_portrait ? '18%' : 'center'};"></video>
+            <div class="absolute inset-0 bg-black/25 group-hover:bg-black/40 transition-colors"></div>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black transition duration-200 shadow-md">
+                <svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+            <div class="absolute bottom-2 left-2 pointer-events-none">
+              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-zinc-300 border border-white/10">${file.is_portrait ? '📱 9:16' : '🎬 16:9'}</span>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-2.5 pointer-events-none">
+              <span class="text-[11px] font-medium text-white truncate drop-shadow">${file.name}</span>
+            </div>
+          `;
+        } else if (file.is_image) {
+          card.className = 'group relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg select-none';
+          card.onclick = () => openImageModalForFile(file, imageItems);
+          card.innerHTML = `
+            <img src="${apiUrl('/api/files/' + file.rel_path)}" alt="${file.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-2.5 pointer-events-none">
+              <span class="text-[11px] font-medium text-white truncate drop-shadow">${file.name}</span>
+            </div>
+          `;
+        } else {
+          card.className = 'group relative aspect-square rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 p-3.5 flex flex-col justify-between cursor-pointer transition select-none';
+          card.onclick = () => openDocModal(file.rel_path);
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">${file.extension.replace('.', '')}</span>
+            </div>
+            <div>
+              <div class="text-xs font-medium text-white truncate" title="${file.name}">${file.name}</div>
+              <div class="text-[11px] text-zinc-500 font-mono mt-0.5">${file.size_formatted}</div>
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      });
+    }
+
+    function filterGrid() {
+      if (currentFolder) renderFolderItems();
+    }
+
+    // -------------------------------------------------------------
+    // API: GET /api/stream/{filepath} (Video Range Stream)
+    // -------------------------------------------------------------
+    function openVideoModal(file) {
+      const player = document.getElementById('theaterPlayer');
+      const relPath = file.rel_path;
+      player.src = apiUrl('/api/stream/' + relPath);
+      document.getElementById('videoModalTitle').innerText = file.name;
+      document.getElementById('videoDownloadBtn').href = apiUrl('/api/files/' + relPath);
+      
+      const sizeEl = document.getElementById('videoModalSize');
+      if (sizeEl) sizeEl.innerText = file.size_formatted || '';
+      const dateEl = document.getElementById('videoModalDate');
+      if (dateEl) dateEl.innerText = file.modified || '';
+      const vaultEl = document.getElementById('videoModalVault');
+      if (vaultEl) vaultEl.innerText = `media/${file.folder || 'Videos'}/`;
+
+      const card = document.getElementById('videoModalCard');
+      const badge = document.getElementById('videoAspectBadge');
+
+      const applyLayout = (portrait, w, h) => {
+        if (portrait) {
+          card.className = 'transition-all duration-300 w-full max-w-sm sm:max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]';
+          badge.innerText = `📱 Portrait ${w ? `${w}x${h}` : '9:16'}`;
+          badge.className = 'inline-flex text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        } else {
+          card.className = 'transition-all duration-300 w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]';
+          badge.innerText = `🎬 Widescreen ${w ? `${w}x${h}` : '16:9'}`;
+          badge.className = 'inline-flex text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20';
+        }
+      };
+
+      if (file.is_portrait !== undefined) applyLayout(file.is_portrait, file.width, file.height);
+
+      player.onloadedmetadata = () => {
+        const detected = player.videoHeight > player.videoWidth;
+        applyLayout(detected, player.videoWidth, player.videoHeight);
+      };
+
+      currentRateIdx = 0;
+      player.playbackRate = 1.0;
+      document.getElementById('speedBtn').innerText = '1x';
+
+      document.getElementById('videoModal').classList.remove('hidden');
+      player.play().catch(() => {});
+    }
+
+    function closeVideoModal() {
+      const player = document.getElementById('theaterPlayer');
+      player.pause();
+      player.src = '';
+      document.getElementById('videoModal').classList.add('hidden');
+    }
+
+    function seekVideo(seconds) {
+      const player = document.getElementById('theaterPlayer');
+      if (player) player.currentTime = Math.max(0, Math.min(player.duration || 99999, player.currentTime + seconds));
+    }
+
+    function toggleVideoPlaybackRate() {
+      const player = document.getElementById('theaterPlayer');
+      if (!player) return;
+      currentRateIdx = (currentRateIdx + 1) % playbackRates.length;
+      const rate = playbackRates[currentRateIdx];
+      player.playbackRate = rate;
+      document.getElementById('speedBtn').innerText = `${rate}x`;
+    }
+
+    // Photo Lightbox
+    function openImageModalForFile(file, galleryList) {
+      currentGalleryImages = (galleryList && galleryList.length) ? galleryList : allFiles.filter(f => f.is_image);
+      currentImageIndex = currentGalleryImages.findIndex(f => f.rel_path === file.rel_path);
+      if (currentImageIndex === -1) {
+        currentGalleryImages = [file];
+        currentImageIndex = 0;
+      }
+      displayCurrentImage();
+      document.getElementById('imageModal').classList.remove('hidden');
+    }
+
+    function displayCurrentImage() {
+      if (currentImageIndex < 0 || currentImageIndex >= currentGalleryImages.length) return;
+      const file = currentGalleryImages[currentImageIndex];
+
+      document.getElementById('imageModalTitle').innerText = file.name;
+      document.getElementById('imageModalSrc').src = apiUrl('/api/files/' + file.rel_path);
+      document.getElementById('imageDownloadBtn').href = apiUrl('/api/files/' + file.rel_path);
+      
+      const rawLink = document.getElementById('imageRawLink');
+      if (rawLink) rawLink.href = apiUrl('/api/files/' + file.rel_path);
+
+      const counterEl = document.getElementById('imageModalCounter');
+      if (counterEl) counterEl.innerText = `${currentImageIndex + 1} of ${currentGalleryImages.length}`;
+
+      const dimText = (file.width && file.height) ? `${file.width} × ${file.height} px` : 'High Definition';
+      document.getElementById('imageMetaDim').innerText = dimText;
+      document.getElementById('imageMetaSize').innerText = file.size_formatted || '--';
+      document.getElementById('imageMetaDate').innerText = file.modified || '--';
+      document.getElementById('imageMetaLocation').innerText = `media/${file.folder || 'Photos'}/`;
+
+      const prevBtn = document.getElementById('imgPrevBtn');
+      const nextBtn = document.getElementById('imgNextBtn');
+      const multi = currentGalleryImages.length > 1;
+      if (prevBtn) prevBtn.style.display = multi ? 'flex' : 'none';
+      if (nextBtn) nextBtn.style.display = multi ? 'flex' : 'none';
+    }
+
+    function nextImage() {
+      if (currentGalleryImages.length <= 1) return;
+      currentImageIndex = (currentImageIndex + 1) % currentGalleryImages.length;
+      displayCurrentImage();
+    }
+
+    function prevImage() {
+      if (currentGalleryImages.length <= 1) return;
+      currentImageIndex = (currentImageIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+      displayCurrentImage();
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.add('hidden');
+    }
+
+    // Document Viewer Modal
+    async function openDocModal(relPath) {
+      document.getElementById('docModalTitle').innerText = relPath;
+      document.getElementById('docDownloadBtn').href = apiUrl('/api/files/' + relPath);
+      document.getElementById('docModalContent').innerText = 'Loading content...';
+      
+      const ext = relPath.split('.').pop().toLowerCase();
+      isDocMarkdown = ext === 'md';
+      docShowingRaw = false;
+      document.getElementById('docTypeBadge').innerText = ext.toUpperCase();
+      document.getElementById('docToggleFormatBtn').classList.toggle('hidden', !isDocMarkdown);
+
+      document.getElementById('docModal').classList.remove('hidden');
+
+      try {
+        let contentUrl = apiUrl('/api/files/' + relPath + '/content');
+        let res = await fetch(contentUrl);
+        if (!res.ok) {
+          contentUrl = apiUrl('/api/files/' + relPath);
+          res = await fetch(contentUrl);
+          rawDocContent = await res.text();
+        } else {
+          const data = await res.json();
+          rawDocContent = data.content || (typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+        }
+        renderDocBody();
+      } catch (err) {
+        document.getElementById('docModalContent').innerText = 'Failed to load file contents: ' + err.message;
+      }
+    }
+
+    function renderDocBody() {
+      const el = document.getElementById('docModalContent');
+      if (isDocMarkdown && !docShowingRaw && window.marked) {
+        el.className = 'p-6 overflow-y-auto custom-scroll text-xs text-zinc-300 font-sans leading-relaxed markdown-content flex-1 bg-zinc-950/60';
+        el.innerHTML = marked.parse(rawDocContent);
+      } else {
+        el.className = 'p-6 overflow-y-auto custom-scroll text-xs text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap flex-1 bg-zinc-950/60';
+        el.innerText = rawDocContent;
+      }
+    }
+
+    function toggleDocFormat() {
+      docShowingRaw = !docShowingRaw;
+      document.getElementById('docToggleFormatBtn').innerText = docShowingRaw ? 'Formatted' : 'Raw';
+      renderDocBody();
+    }
+
+    function closeDocModal() {
+      document.getElementById('docModal').classList.add('hidden');
+    }
+
+    // -------------------------------------------------------------
+    // API: POST /api/upload (Multipart Upload)
+    // -------------------------------------------------------------
+    async function uploadFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      if (currentFolder) formData.append('folder', currentFolder);
+
+      const label = document.getElementById('uploadLabel');
+      const prevText = label.innerText;
+      label.innerText = 'Uploading...';
+
+      try {
+        const res = await fetch(apiUrl('/api/upload'), {
+          method: 'POST',
+          body: formData
+        });
+        if (res.ok) {
+          fetchFiles();
+        } else {
+          alert('Upload failed: HTTP ' + res.status);
+        }
+      } catch (err) {
+        alert('Upload error: ' + err.message);
+      } finally {
+        label.innerText = prevText;
+        event.target.value = '';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // API: POST /api/agent/run (Autonomous Agent Execution)
+    // -------------------------------------------------------------
+    async function runAgentMission() {
+      const input = document.getElementById('agentPromptInput');
+      const prompt = input.value.trim();
+      if (!prompt) return;
+
+      const feed = document.getElementById('agentChatFeed');
+      const btn = document.getElementById('agentRunBtn');
+      const btnText = document.getElementById('agentRunBtnText');
+      const icon = document.getElementById('agentRunIcon');
+
+      // Append user bubble
+      const userBubble = document.createElement('div');
+      userBubble.className = 'flex justify-end';
+      userBubble.innerHTML = `
+        <div class="bg-zinc-800 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-[88%] shadow-sm break-words">
+          ${prompt}
+        </div>
+      `;
+      feed.appendChild(userBubble);
+      input.value = '';
+
+      // Append pending bubble
+      const pendingBubble = document.createElement('div');
+      pendingBubble.className = 'flex flex-col gap-2 max-w-[96%] sm:max-w-2xl';
+      pendingBubble.innerHTML = `
+        <div class="flex items-center gap-2 text-xs text-zinc-400 font-mono py-1">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          <span>ZeroClaw executing autonomous mission...</span>
+        </div>
+      `;
+      feed.appendChild(pendingBubble);
+      feed.scrollTop = feed.scrollHeight;
+
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+      btnText.innerText = 'Running';
+      icon.classList.add('animate-spin');
+
+      try {
+        const res = await fetch(apiUrl('/api/agent/run'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: prompt,
+            session_id: currentAgentSessionId
+          })
+        });
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        // Standardize response fields (compatible with both backend schemas)
+        const success = data.success !== undefined ? data.success : true;
+        const answerRaw = data.finalAnswer || data.final_answer || (success ? 'Mission completed.' : 'Execution failed.');
+        const steps = data.executionLog || data.steps || [];
+        const turnsUsed = data.turnsUsed || (steps.length ? steps.length : 1);
+        const tel = data.telemetry || {};
+
+        // Render tool step pills
+        let stepsHtml = '';
+        if (steps.length > 0) {
+          stepsHtml = '<div class="flex flex-wrap gap-1.5 my-1">';
+          steps.forEach(s => {
+            let label = '';
+            if (typeof s === 'string') {
+              label = s;
+            } else if (s && typeof s === 'object') {
+              const tool = s.tool || s.action || s.name || 'step';
+              const filename = (s.args && (s.args.filename || s.args.path)) || s.detail || '';
+              label = filename ? `${tool}: ${filename}` : tool;
+            }
+            stepsHtml += `
+              <span class="inline-flex items-center gap-1 text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded-md">
+                <span class="text-emerald-400">✓</span> ${label}
+              </span>
+            `;
+          });
+          stepsHtml += '</div>';
+        }
+
+        const parsedAnswer = window.marked ? marked.parse(answerRaw) : `<pre>${answerRaw}</pre>`;
+
+        pendingBubble.innerHTML = `
+          ${stepsHtml}
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm p-4 text-xs sm:text-sm text-zinc-200 leading-relaxed markdown-content max-w-none break-words">
+            ${parsedAnswer}
+          </div>
+          <div class="text-[10px] font-mono text-zinc-500 pl-1 flex items-center gap-2">
+            <span class="text-red-400 font-semibold">${tel.engine || 'ZeroClaw'}</span>
+            <span>•</span>
+            <span>${turnsUsed} turns</span>
+            <span>•</span>
+            <span>${tel.duration_seconds ? tel.duration_seconds + 's' : 'Completed'}</span>
+          </div>
+        `;
+
+        if (data.session_id) currentAgentSessionId = data.session_id;
+        loadAgentSessions();
+
+      } catch (err) {
+        pendingBubble.innerHTML = `
+          <div class="bg-rose-950/40 border border-rose-800 text-rose-300 rounded-xl p-3 text-xs font-mono">
+            Error executing mission: ${err.message}
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        btnText.innerText = 'Run';
+        icon.classList.remove('animate-spin');
+        feed.scrollTop = feed.scrollHeight;
+      }
+    }
+
+    function handleAgentKeydown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        runAgentMission();
+      }
+    }
+
+    function populateAgentPrompt(text) {
+      const input = document.getElementById('agentPromptInput');
+      input.value = text;
+      input.focus();
+    }
+
+    async function loadAgentSessions() {
+      try {
+        const res = await fetch(apiUrl('/api/agent/sessions'));
+        if (!res.ok) return;
+        const data = await res.json();
+        agentSessionsList = data.sessions || (Array.isArray(data) ? data : []);
+        renderAgentSessions();
+      } catch (e) {}
+    }
+
+    function renderAgentSessions() {
+      const list = document.getElementById('agentSessionsList');
+      if (!agentSessionsList.length) {
+        list.innerHTML = `<div class="text-[10px] text-zinc-500 font-mono p-2">No active sessions.</div>`;
+        return;
+      }
+      list.innerHTML = '';
+      agentSessionsList.forEach(s => {
+        const item = document.createElement('div');
+        const active = s.id === currentAgentSessionId;
+        item.className = `p-2 rounded-lg cursor-pointer transition text-xs font-mono flex items-center justify-between ${active ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'}`;
+        item.onclick = () => loadAgentSession(s.id);
+        item.innerHTML = `
+          <span class="truncate pr-1">${s.title || 'Conversation'}</span>
+          <span class="text-[9px] text-zinc-500 flex-shrink-0">${s.messages ? s.messages.length : ''}</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function loadAgentSession(id) {
+      currentAgentSessionId = id;
+      renderAgentSessions();
+      try {
+        const res = await fetch(apiUrl('/api/agent/sessions/' + id));
+        if (!res.ok) return;
+        const data = await res.json();
+        const session = data.session || data;
+        document.getElementById('agentActiveChatTitle').innerText = session.title || 'Conversation';
+        renderAgentMessages(session.messages || []);
+      } catch (e) {}
+    }
+
+    function renderAgentMessages(messages) {
+      const feed = document.getElementById('agentChatFeed');
+      feed.innerHTML = '';
+      messages.forEach(msg => {
+        if (msg.role === 'user') {
+          const u = document.createElement('div');
+          u.className = 'flex justify-end';
+          u.innerHTML = `<div class="bg-zinc-800 text-white text-xs sm:text-sm px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-[88%] shadow-sm break-words">${msg.content}</div>`;
+          feed.appendChild(u);
+        } else {
+          const a = document.createElement('div');
+          a.className = 'flex flex-col gap-2 max-w-[96%] sm:max-w-2xl';
+          const parsed = window.marked ? marked.parse(msg.content) : `<pre>${msg.content}</pre>`;
+          a.innerHTML = `
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm p-4 text-xs sm:text-sm text-zinc-200 leading-relaxed markdown-content max-w-none break-words">${parsed}</div>
+            <div class="text-[10px] font-mono text-zinc-500 pl-1">ZeroClaw Assistant</div>
+          `;
+          feed.appendChild(a);
+        }
+      });
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function createNewAgentSession() {
+      currentAgentSessionId = null;
+      document.getElementById('agentActiveChatTitle').innerText = 'New Conversation';
+      document.getElementById('agentChatFeed').innerHTML = `
+        <div class="max-w-md mx-auto py-12 text-center text-xs text-zinc-500 font-mono">
+          Ready for instructions. Enter a task below.
+        </div>
+      `;
+      renderAgentSessions();
+    }
+
+    async function clearAllAgentHistory() {
+      if (!confirm('Clear all conversation sessions?')) return;
+      try {
+        await fetch(apiUrl('/api/agent/history/clear'), { method: 'POST' });
+        agentSessionsList = [];
+        createNewAgentSession();
+      } catch (e) {}
+    }
+
+    // -------------------------------------------------------------
+    // FEED & CONSOLE TAB LOGIC
+    // -------------------------------------------------------------
+    async function fetchFeed() {
+      const list = document.getElementById('feedList');
+      try {
+        const res = await fetch(apiUrl('/api/feed'));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const posts = data.feed || (Array.isArray(data) ? data : []);
+        if (!posts.length) {
+          list.innerHTML = `<div class="py-12 text-center text-xs text-zinc-500 font-mono">No feed events yet.</div>`;
+          return;
+        }
+        list.innerHTML = posts.map(p => `
+          <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-850 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="font-semibold text-white">${p.title || 'Agent Output'}</span>
+              </div>
+              <span class="text-[10px] font-mono text-zinc-500">${p.time_ago || p.timestamp || ''}</span>
+            </div>
+            <div class="text-xs text-zinc-300 leading-relaxed">${p.content || ''}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        list.innerHTML = `<div class="py-12 text-center text-xs text-zinc-500 font-mono">Failed to load feed: ${e.message}</div>`;
+      }
+    }
+
+    function initConsole() {
+      if (consoleWs) return;
+      try {
+        const url = wsUrl('/ws/logs');
+        consoleWs = new WebSocket(url);
+        consoleWs.onopen = () => {
+          document.getElementById('consoleWsStatus').innerText = 'Connected';
+          appendConsoleLog('System', 'Connected to PhoneNode telemetry stream.');
+        };
+        consoleWs.onmessage = (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'telemetry') {
+              if (msg.cpu !== undefined) {
+                document.getElementById('telCpu').innerText = msg.cpu;
+                document.getElementById('telCpuBar').style.width = Math.min(100, msg.cpu) + '%';
+              }
+              if (msg.temp !== undefined) document.getElementById('telTemp').innerText = msg.temp;
+            } else if (msg.type === 'nas') {
+              appendConsoleLog('Stream', `${msg.filename} chunk (${msg.bytes} bytes)`);
+            }
+          } catch (err) {}
+        };
+        consoleWs.onclose = () => {
+          document.getElementById('consoleWsStatus').innerText = 'Disconnected';
+          consoleWs = null;
+        };
+      } catch (e) {
+        document.getElementById('consoleWsStatus').innerText = 'Offline';
+      }
+    }
+
+    function appendConsoleLog(category, text) {
+      const stream = document.getElementById('consoleLogStream');
+      if (!stream) return;
+      const row = document.createElement('div');
+      const time = new Date().toLocaleTimeString();
+      row.className = 'text-zinc-400';
+      row.innerHTML = `<span class="text-zinc-600">[${time}]</span> <span class="text-emerald-400">[${category}]</span> ${text}`;
+      stream.appendChild(row);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    // -------------------------------------------------------------
+    // BACKEND SETTINGS MODAL
+    // -------------------------------------------------------------
+    function openSettingsModal() {
+      document.getElementById('apiBaseInput').value = PhoneNodeConfig.apiBase;
+      document.getElementById('backendTestResult').classList.add('hidden');
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function saveBackendSettings() {
+      const val = document.getElementById('apiBaseInput').value.trim();
+      PhoneNodeConfig.setApiBase(val);
+      closeSettingsModal();
+      fetchFiles();
+    }
+
+    function resetBackendSettings() {
+      PhoneNodeConfig.setApiBase('');
+      document.getElementById('apiBaseInput').value = '';
+    }
+
+    async function testBackendConnection() {
+      const resEl = document.getElementById('backendTestResult');
+      resEl.classList.remove('hidden');
+      resEl.innerText = 'Pinging /api/files...';
+      resEl.className = 'text-[11px] font-mono text-zinc-400 pt-1';
+
+      const testBase = document.getElementById('apiBaseInput').value.trim().replace(/\/+$/, '');
+      const testUrl = (testBase ? testBase : '') + '/api/files';
+
+      try {
+        const res = await fetch(testUrl);
+        if (res.ok) {
+          resEl.innerText = '✓ Success: Connected (HTTP ' + res.status + ')';
+          resEl.className = 'text-[11px] font-mono text-emerald-400 pt-1';
+        } else {
+          resEl.innerText = '✗ Error: Server responded with HTTP ' + res.status;
+          resEl.className = 'text-[11px] font-mono text-amber-400 pt-1';
+        }
+      } catch (e) {
+        resEl.innerText = '✗ Failed to connect: ' + e.message;
+        resEl.className = 'text-[11px] font-mono text-rose-400 pt-1';
+      }
+    }
+
+    function updateConnectionStatus(online) {
+      const pill = document.getElementById('connStatusPill');
+      const txt = document.getElementById('connStatusText');
+      if (online) {
+        pill.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1';
+        txt.innerText = 'online';
+      } else {
+        pill.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-1';
+        txt.innerText = 'offline';
+      }
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeVideoModal();
+        closeImageModal();
+        closeDocModal();
+        closeSettingsModal();
+      } else if (!document.getElementById('imageModal').classList.contains('hidden')) {
+        if (e.key === 'ArrowRight') nextImage();
+        else if (e.key === 'ArrowLeft') prevImage();
+      }
+    });
+
+    // Hash routing & Init
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.replace('#', '') || 'media';
+      switchTab(hash);
+    });
+  </script>
+</body>
+</html>

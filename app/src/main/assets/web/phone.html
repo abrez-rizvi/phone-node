@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>PhoneNode // Phone Console</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="./js/tailwind.min.js"></script>
+  <script src="./js/config.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+    .card {
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 3px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #000;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #222;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 select-none custom-scroll">
+
+  <!-- Header -->
+  <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-zinc-800 mb-3">
+    <div class="flex items-center justify-between w-full sm:w-auto">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0"></div>
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <span class="text-sm font-semibold tracking-wider text-white">PHONENODE</span>
+          <span class="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-400">PHONE (2)</span>
+          <span class="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded border border-red-500/30 text-red-400 bg-red-500/10 font-mono">ZEROCLAW</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between sm:justify-end gap-1.5 text-xs w-full sm:w-auto">
+      <div class="flex items-center gap-1 sm:gap-2">
+        <a href="./index.html" class="text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-zinc-900 transition">Media</a>
+        <a href="./agent.html" class="text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-zinc-900 transition">Agent</a>
+        <a href="./feed.html" class="text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-zinc-900 transition">Feed</a>
+      </div>
+      <button id="fsBtn" onclick="toggleFullscreen()" class="px-2.5 py-1 rounded border border-zinc-800 text-[10px] text-zinc-300 hover:bg-zinc-900 transition flex-shrink-0">
+        Fullscreen
+      </button>
+    </div>
+  </header>
+
+  <!-- Telemetry Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-3">
+    
+    <!-- CPU -->
+    <div class="card p-3 rounded-xl">
+      <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+        <span>CPU</span>
+        <span class="text-zinc-600">8 Cores</span>
+      </div>
+      <div class="flex items-baseline gap-1">
+        <span id="cpuVal" class="text-2xl font-bold text-white">18.4</span>
+        <span class="text-xs text-zinc-500">%</span>
+      </div>
+      <div class="w-full bg-zinc-900 h-1 rounded-full mt-2 overflow-hidden">
+        <div id="cpuBar" class="bg-white h-full w-[18%] transition-all duration-500"></div>
+      </div>
+    </div>
+
+    <!-- Thermal -->
+    <div class="card p-3 rounded-xl">
+      <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+        <span>Temperature</span>
+        <span class="text-emerald-400 text-[9px]">Normal</span>
+      </div>
+      <div class="flex items-baseline gap-1">
+        <span id="tempVal" class="text-2xl font-bold text-white">34.2</span>
+        <span class="text-xs text-zinc-500">°C</span>
+      </div>
+      <div class="text-[10px] text-zinc-600 mt-2">Thermal state nominal</div>
+    </div>
+
+    <!-- Battery -->
+    <div class="card p-3 rounded-xl">
+      <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+        <span>Battery</span>
+        <span class="text-zinc-400 text-[9px]">Charging</span>
+      </div>
+      <div class="flex items-baseline gap-1">
+        <span id="batVal" class="text-2xl font-bold text-white">86</span>
+        <span class="text-xs text-zinc-500">%</span>
+      </div>
+      <div class="text-[10px] text-zinc-600 mt-2">Internal power supply</div>
+    </div>
+
+    <!-- Streaming Bandwidth -->
+    <div class="card p-3 rounded-xl" id="nasCard">
+      <div class="text-[10px] text-zinc-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+        <span>Stream</span>
+        <span id="nasStatus" class="text-zinc-600 text-[9px]">Idle</span>
+      </div>
+      <div class="flex items-baseline gap-1">
+        <span id="speedVal" class="text-2xl font-bold text-white">0.0</span>
+        <span class="text-xs text-zinc-500">MB/s</span>
+      </div>
+      <div id="chunkInfo" class="text-[10px] text-zinc-600 mt-2 truncate">HTTP 206 Ready</div>
+    </div>
+
+  </div>
+
+  <!-- Activity Feed -->
+  <div class="card p-3.5 rounded-xl flex-1 flex flex-col min-h-[300px]">
+    <div class="flex items-center justify-between pb-2 border-b border-zinc-800/80 mb-2.5">
+      <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-medium">Activity Stream</span>
+      <span id="wsStatus" class="text-[10px] text-emerald-400">Connected</span>
+    </div>
+    <div id="logStream" class="flex-1 overflow-y-auto space-y-1.5 text-[11px] pr-1 custom-scroll">
+      <div class="text-zinc-600">[00:00:00] Console initialized. Screen wake lock active.</div>
+    </div>
+  </div>
+
+  <footer class="pt-3 flex items-center justify-between text-[10px] text-zinc-600">
+    <span>Snapdragon 8+ Gen 1 • ZeroClaw Sovereign Runtime • 512 GB Storage</span>
+    <span id="clientCount">1 client connected</span>
+  </footer>
+
+  <script>
+    let ws = null;
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {}
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        document.getElementById('fsBtn').innerText = 'Exit';
+      } else {
+        document.exitFullscreen().catch(() => {});
+        document.getElementById('fsBtn').innerText = 'Fullscreen';
+      }
+    }
+
+    function connectWS() {
+      ws = new WebSocket(wsUrl('/ws/logs'));
+
+      ws.onopen = () => {
+        document.getElementById('wsStatus').innerHTML = '<span class="text-emerald-400">Connected</span>';
+        logEvent('System', 'Connected to PhoneNode.');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleTelemetry(data);
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        document.getElementById('wsStatus').innerHTML = '<span class="text-red-400">Reconnecting...</span>';
+        setTimeout(connectWS, 2000);
+      };
+    }
+
+    function handleTelemetry(data) {
+      if (data.type === 'telemetry') {
+        if (data.cpu !== undefined) {
+          document.getElementById('cpuVal').innerText = data.cpu.toFixed(1);
+          document.getElementById('cpuBar').style.width = Math.min(data.cpu, 100) + '%';
+        }
+        if (data.temp !== undefined) {
+          document.getElementById('tempVal').innerText = data.temp.toFixed(1);
+        }
+        if (data.active_clients !== undefined) {
+          document.getElementById('clientCount').innerText = `${data.active_clients} client(s) connected`;
+        }
+      } else if (data.type === 'nas') {
+        if (data.event === 'range_stream') {
+          triggerStreamPulse(data);
+          logEvent('Media', `Served ${data.filename} (bytes ${data.range})`);
+        } else {
+          logEvent('Media', data.msg);
+        }
+      } else if (data.type === 'agent') {
+        const engine = data.engine || 'ZeroClaw';
+        if (data.action === 'tool_call') {
+          logEvent(engine, `Tool: ${data.tool}(${JSON.stringify(data.args)})`);
+        } else {
+          logEvent(engine, data.msg);
+        }
+      } else if (data.type === 'system') {
+        logEvent('System', data.msg);
+      }
+    }
+
+    function triggerStreamPulse(data) {
+      document.getElementById('nasStatus').innerHTML = '<span class="text-emerald-400">Streaming</span>';
+      document.getElementById('speedVal').innerText = (Math.random() * 2 + 2.5).toFixed(1);
+      document.getElementById('chunkInfo').innerText = `Range: ${data.range}`;
+      setTimeout(() => {
+        document.getElementById('nasStatus').innerText = 'Idle';
+        document.getElementById('speedVal').innerText = '0.0';
+      }, 1200);
+    }
+
+    function logEvent(tag, msg) {
+      const container = document.getElementById('logStream');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = 'flex items-start gap-2 leading-relaxed';
+
+      let tagClass = 'text-zinc-500';
+      if (tag === 'Media') tagClass = 'text-sky-400';
+      if (tag === 'Agent' || tag === 'ZeroClaw') tagClass = 'text-red-400 font-semibold';
+      if (tag === 'System') tagClass = 'text-emerald-400';
+
+      div.innerHTML = `
+        <span class="text-zinc-600 text-[10px]">[${time}]</span>
+        <span class="${tagClass} font-medium">[${tag}]</span>
+        <span class="text-zinc-300 truncate">${msg}</span>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+      if (container.children.length > 80) container.removeChild(container.firstChild);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      connectWS();
+      requestWakeLock();
+    });
+  </script>
+</body>
+</html>

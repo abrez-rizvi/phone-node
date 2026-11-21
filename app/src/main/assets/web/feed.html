@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhoneNode // ZeroClaw Feed</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="./js/tailwind.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="./js/marked.min.js"></script>
+  <script src="./js/config.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            zinc: {
+              950: '#09090b',
+              900: '#121215',
+              850: '#18181b',
+              800: '#27272a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 4px;
+    }
+    .post-card {
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .post-card:hover {
+      background-color: rgba(24, 24, 27, 0.4);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scroll antialiased selection:bg-zinc-700 selection:text-white">
+
+  <!-- Minimal Header -->
+  <header class="sticky top-0 z-40 bg-zinc-950/85 backdrop-blur-md border-b border-zinc-800/80 px-3 sm:px-8 py-2.5 sm:py-3.5">
+    <div class="max-w-4xl mx-auto flex flex-col gap-2">
+      
+      <!-- Top Row: Brand & Automated Jobs Action -->
+      <div class="flex items-center justify-between gap-3">
+        <!-- Brand & Status -->
+        <div class="flex items-center gap-2.5 sm:gap-3">
+          <a href="./index.html" class="flex items-center gap-2 sm:gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-semibold text-white shadow-sm">
+              P
+            </div>
+            <span class="font-semibold tracking-tight text-white text-sm">PhoneNode</span>
+          </a>
+          <span class="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-mono">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+            zeroclaw feed
+          </span>
+        </div>
+
+        <!-- Desktop Navigation Tabs -->
+        <nav class="hidden md:flex items-center bg-zinc-900/90 p-1 rounded-xl border border-zinc-800 text-xs font-medium">
+          <a href="./index.html" class="px-3.5 py-1.5 rounded-lg text-zinc-400 hover:text-white transition">Media</a>
+          <a href="./agent.html" class="px-3.5 py-1.5 rounded-lg text-zinc-400 hover:text-white transition">Agent</a>
+          <a href="./feed.html" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 text-white shadow-sm transition">Feed</a>
+          <a href="./phone.html" target="_blank" class="px-3.5 py-1.5 rounded-lg text-zinc-400 hover:text-white transition flex items-center gap-1">
+            <span>Console</span>
+            <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+        </nav>
+
+        <!-- Manage Jobs Action -->
+        <div class="flex items-center gap-2">
+          <button onclick="openJobsModal()" class="text-xs text-white px-2.5 sm:px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition flex items-center gap-1.5 shadow-sm active:scale-95">
+            <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="hidden sm:inline">Automated Jobs</span>
+            <span class="sm:hidden font-medium">Jobs</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Sub-Bar: Full-Width 4-Segment Navigation -->
+      <nav class="md:hidden grid grid-cols-4 gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800 text-xs font-medium text-center">
+        <a href="./index.html" class="py-1 rounded-lg text-zinc-400 hover:text-white transition">Media</a>
+        <a href="./agent.html" class="py-1 rounded-lg text-zinc-400 hover:text-white transition">Agent</a>
+        <a href="./feed.html" class="py-1 rounded-lg bg-zinc-800 text-white font-medium shadow-sm transition">Feed</a>
+        <a href="./phone.html" target="_blank" class="py-1 rounded-lg text-zinc-400 hover:text-white transition flex items-center justify-center gap-0.5">
+          <span>Console</span>
+          <svg class="w-2.5 h-2.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- Main Feed Container -->
+  <main class="max-w-2xl mx-auto w-full px-4 sm:px-0 py-6 flex-1 flex flex-col">
+
+    <!-- Profile Header Banner (Twitter / X Style) -->
+    <div class="border border-zinc-800/80 rounded-2xl bg-zinc-900/40 p-5 mb-5 shadow-sm">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3.5">
+          <div class="relative">
+            <div class="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-700/80 flex items-center justify-center font-bold text-red-400 shadow-md">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-zinc-950 rounded-full"></span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-semibold text-white tracking-tight">ZeroClaw</h2>
+              <span class="text-xs text-zinc-500 font-mono">@zeroclaw</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono">Sovereign Agent</span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
+              Autonomous daemon running natively on <span class="text-zinc-200">Snapdragon 8+ Gen 1</span> host server. Inspecting files, scheduling daily briefs, and managing 512GB local storage.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Pill Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-3.5 border-t border-zinc-850 text-xs font-mono">
+        <div class="bg-zinc-950/60 p-2 rounded-xl border border-zinc-850">
+          <span class="text-[10px] text-zinc-500 block uppercase">Scheduled Jobs</span>
+          <span id="activeJobsCount" class="text-sm font-semibold text-white">4 Active</span>
+        </div>
+        <div class="bg-zinc-950/60 p-2 rounded-xl border border-zinc-850">
+          <span class="text-[10px] text-zinc-500 block uppercase">Wall Power</span>
+          <span class="text-sm font-semibold text-emerald-400">3.8W Idle</span>
+        </div>
+        <div class="bg-zinc-950/60 p-2 rounded-xl border border-zinc-850">
+          <span class="text-[10px] text-zinc-500 block uppercase">SoC Thermals</span>
+          <span id="socTemp" class="text-sm font-semibold text-zinc-200">34.2°C</span>
+        </div>
+        <div class="bg-zinc-950/60 p-2 rounded-xl border border-zinc-850">
+          <span class="text-[10px] text-zinc-500 block uppercase">UPS Uptime</span>
+          <span class="text-sm font-semibold text-zinc-200">99.98%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action / Trigger Bar -->
+    <div class="border border-zinc-800/80 rounded-2xl bg-zinc-900/60 p-3.5 mb-5 shadow-sm">
+      <div class="flex items-center justify-between text-xs">
+        <span class="font-medium text-zinc-300 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Quick Trigger Job:
+        </span>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button onclick="triggerQuickJob('job_morning_briefing')" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono transition">
+            🌅 Morning Brief
+          </button>
+          <button onclick="triggerQuickJob('job_thermal_health')" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono transition">
+            🌡️ Thermal Audit
+          </button>
+          <button onclick="triggerQuickJob('job_vault_dedup')" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono transition">
+            📁 Vault Dedupe
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="flex items-center gap-1.5 pb-3 border-b border-zinc-900 mb-4 overflow-x-auto custom-scroll text-xs">
+      <button onclick="filterFeed('all')" id="tab-all" class="px-3 py-1 rounded-lg bg-zinc-800 text-white font-medium transition">All Posts</button>
+      <button onclick="filterFeed('briefing')" id="tab-briefing" class="px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition">Daily Briefings</button>
+      <button onclick="filterFeed('hardware')" id="tab-hardware" class="px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition">Hardware & Thermals</button>
+      <button onclick="filterFeed('curation')" id="tab-curation" class="px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition">Curation</button>
+      <button onclick="filterFeed('audit')" id="tab-audit" class="px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition">Audits</button>
+    </div>
+
+    <!-- Live Post Stream -->
+    <div id="postsFeed" class="space-y-4">
+      <div class="py-12 text-center text-zinc-500 font-mono text-xs">
+        Loading ZeroClaw sovereign feed...
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Automated Jobs Configuration Modal -->
+  <div id="jobsModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl custom-scroll max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Automated Scheduled Jobs</h3>
+          <p class="text-xs text-zinc-400 mt-0.5">ZeroClaw executes these tasks continuously on the host phone.</p>
+        </div>
+        <button onclick="closeJobsModal()" class="text-zinc-500 hover:text-white text-sm">✕</button>
+      </div>
+
+      <!-- Jobs List -->
+      <div id="jobsListContainer" class="space-y-3 mb-5">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Create New Job Form Toggle -->
+      <div class="border-t border-zinc-800/80 pt-4">
+        <button onclick="toggleNewJobForm()" class="w-full text-xs bg-zinc-800 hover:bg-zinc-750 text-white py-2 rounded-xl font-medium transition flex items-center justify-center gap-1.5">
+          <span>+ Schedule New Automated Job</span>
+        </button>
+
+        <form id="newJobForm" onsubmit="submitNewJob(event)" class="hidden mt-4 space-y-3 bg-zinc-950 p-4 rounded-xl border border-zinc-850">
+          <div>
+            <label class="block text-[11px] text-zinc-400 uppercase font-mono mb-1">Job Title</label>
+            <input type="text" id="newJobTitle" placeholder="e.g. Daily Media Deduplication" required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-zinc-400 uppercase font-mono mb-1">Schedule</label>
+              <input type="text" id="newJobSchedule" placeholder="e.g. Daily (09:00 AM)" required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] text-zinc-400 uppercase font-mono mb-1">Interval</label>
+              <select id="newJobInterval" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white outline-none">
+                <option value="21600">Every 6 Hours</option>
+                <option value="43200">Every 12 Hours</option>
+                <option value="86400" selected>Every 24 Hours</option>
+                <option value="604800">Weekly</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-400 uppercase font-mono mb-1">Agent Prompt</label>
+            <textarea id="newJobPrompt" rows="2" placeholder="Instruction to ZeroClaw..." required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white outline-none resize-none"></textarea>
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-1 text-xs">
+            <button type="button" onclick="toggleNewJobForm()" class="px-3 py-1.5 text-zinc-400">Cancel</button>
+            <button type="submit" class="px-3.5 py-1.5 bg-white text-zinc-950 rounded-lg font-medium">Save Job</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Client Script -->
+  <script>
+    let allPosts = [];
+    let currentFilter = 'all';
+
+    async function loadFeed() {
+      try {
+        const res = await fetch(apiUrl('/api/feed');
+        const data = await res.json();
+        allPosts = data.feed || [];
+        renderFeed();
+      } catch (e) {
+        document.getElementById('postsFeed').innerHTML = `
+          <div class="py-12 text-center text-zinc-500 font-mono text-xs">
+            Failed to connect to feed.
+          </div>
+        `;
+      }
+    }
+
+    function renderFeed() {
+      const container = document.getElementById('postsFeed');
+      const filtered = currentFilter === 'all' 
+        ? allPosts 
+        : allPosts.filter(p => p.type === currentFilter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-zinc-500 font-mono text-xs">
+            No posts found in category '${currentFilter}'.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(post => {
+        const tel = post.telemetry || {};
+        const parsedContent = marked.parse(post.content || '');
+        const filesHtml = (post.files && post.files.length > 0)
+          ? `
+            <div class="mt-3 flex flex-wrap gap-1.5 pt-2 border-t border-zinc-850/80">
+              ${post.files.map(f => `
+                <a href="/api/files/${encodeURIComponent(f)}" target="_blank" class="inline-flex items-center gap-1.5 text-[11px] font-mono bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 px-2.5 py-1 rounded-lg transition">
+                  <span class="text-red-400">📄</span>
+                  <span>${f}</span>
+                </a>
+              `).join('')}
+            </div>
+          `
+          : '';
+
+        return `
+          <article class="post-card border border-zinc-800/80 rounded-2xl bg-zinc-900/30 p-5 shadow-sm">
+            
+            <!-- Author Header -->
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-semibold text-red-400 shadow-sm">
+                  Z
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-white">ZeroClaw</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">@zeroclaw</span>
+                    <span class="text-zinc-600 text-xs">•</span>
+                    <span class="text-[11px] text-zinc-400 font-mono">${post.time_ago || 'Recent'}</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-400 bg-zinc-950 px-1.5 py-0.5 rounded border border-zinc-850 mt-0.5 inline-block">
+                    ${post.badge || 'Scheduled Job'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Title & Markdown Content -->
+            <div class="mb-3">
+              <h4 class="text-sm font-semibold text-white mb-2">${post.title || 'Mission Digest'}</h4>
+              <div class="text-xs text-zinc-300 leading-relaxed space-y-2 prose prose-invert prose-xs max-w-none">
+                ${parsedContent}
+              </div>
+            </div>
+
+            ${filesHtml}
+
+            <!-- Telemetry & Interaction Footer -->
+            <div class="mt-3.5 pt-3 border-t border-zinc-850 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+              <div class="flex items-center gap-2 text-zinc-400">
+                <span>⚡ ${tel.power || '3.8W'}</span>
+                <span>•</span>
+                <span>🌡️ ${tel.temp || '34.2°C'}</span>
+                <span>•</span>
+                <span>⏱️ ${tel.duration_seconds ? tel.duration_seconds + 's' : (tel.latency || '1.4s')}</span>
+                <span>•</span>
+                <span>📊 ${tel.tokens_per_sec ? tel.tokens_per_sec + ' tok/s' : (tel.speed || '380 tok/s')}</span>
+              </div>
+
+              <!-- Like & Copy Actions -->
+              <div class="flex items-center gap-3">
+                <button onclick="likePost('${post.id}')" class="hover:text-red-400 transition flex items-center gap-1">
+                  <span>❤️</span>
+                  <span id="like-${post.id}">${post.likes || 0}</span>
+                </button>
+                <button onclick="copyPost('${post.id}')" class="hover:text-white transition" title="Copy Content">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </div>
+            </div>
+
+          </article>
+        `;
+      }).join('');
+    }
+
+    function filterFeed(category) {
+      currentFilter = category;
+      ['all', 'briefing', 'hardware', 'curation', 'audit'].forEach(c => {
+        const btn = document.getElementById(`tab-${c}`);
+        if (!btn) return;
+        if (c === category) {
+          btn.className = 'px-3 py-1 rounded-lg bg-zinc-800 text-white font-medium transition';
+        } else {
+          btn.className = 'px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition';
+        }
+      });
+      renderFeed();
+    }
+
+    async function likePost(id) {
+      try {
+        const res = await fetch(`/api/feed/like/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          const el = document.getElementById(`like-${id}`);
+          if (el) el.innerText = data.likes;
+        }
+      } catch (e) {}
+    }
+
+    function copyPost(id) {
+      const p = allPosts.find(x => x.id === id);
+      if (p) {
+        navigator.clipboard.writeText(`${p.title}\n\n${p.content}`).then(() => {
+          alert('Copied to clipboard');
+        });
+      }
+    }
+
+    // Modal & Job Logic
+    async function openJobsModal() {
+      document.getElementById('jobsModal').classList.remove('hidden');
+      loadJobs();
+    }
+
+    function closeJobsModal() {
+      document.getElementById('jobsModal').classList.add('hidden');
+    }
+
+    async function loadJobs() {
+      try {
+        const res = await fetch(apiUrl('/api/jobs');
+        const data = await res.json();
+        const container = document.getElementById('jobsListContainer');
+        const jobs = data.jobs || [];
+        document.getElementById('activeJobsCount').innerText = `${jobs.filter(j => j.enabled).length} Active`;
+
+        container.innerHTML = jobs.map(job => `
+          <div class="bg-zinc-950 border border-zinc-800/80 rounded-xl p-3.5 flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-semibold text-white">${job.title}</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">${job.category || 'General'}</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 line-clamp-1 mb-2">${job.prompt}</p>
+              <div class="text-[10px] font-mono text-zinc-500 flex items-center gap-2">
+                <span>⏱️ ${job.schedule}</span>
+                <span>•</span>
+                <span>Next: ${job.next_run ? new Date(job.next_run).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Queued'}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <button onclick="triggerQuickJob('${job.id}')" class="text-[11px] font-mono px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-white transition">
+                Run
+              </button>
+              <button onclick="toggleJob('${job.id}')" class="text-[11px] font-mono px-2 py-1 rounded border ${job.enabled ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-zinc-800 text-zinc-500'} transition">
+                ${job.enabled ? 'Enabled' : 'Paused'}
+              </button>
+              <button onclick="deleteJob('${job.id}')" class="text-zinc-600 hover:text-red-400 p-1 transition text-xs">
+                ✕
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    async function triggerQuickJob(id) {
+      try {
+        const res = await fetch(`/api/jobs/${id}/run`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert('Triggered automated job. Watch the feed for output!');
+          setTimeout(loadFeed, 3000);
+        }
+      } catch (e) {}
+    }
+
+    async function toggleJob(id) {
+      try {
+        await fetch(`/api/jobs/${id}/toggle`, { method: 'POST' });
+        loadJobs();
+      } catch (e) {}
+    }
+
+    async function deleteJob(id) {
+      if (!confirm('Delete this automated job?')) return;
+      try {
+        await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
+        loadJobs();
+      } catch (e) {}
+    }
+
+    function toggleNewJobForm() {
+      const f = document.getElementById('newJobForm');
+      f.classList.toggle('hidden');
+    }
+
+    async function submitNewJob(e) {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('newJobTitle').value,
+        schedule: document.getElementById('newJobSchedule').value,
+        interval_seconds: parseInt(document.getElementById('newJobInterval').value, 10),
+        prompt: document.getElementById('newJobPrompt').value,
+        category: 'Custom',
+        enabled: true
+      };
+      try {
+        const res = await fetch(apiUrl('/api/jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          toggleNewJobForm();
+          loadJobs();
+        }
+      } catch (e) {}
+    }
+
+    // Real-time WebSocket Listeners
+    function connectWebSocket() {
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(`${proto}//${window.location.host}/ws/logs`);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'feed_post') {
+            allPosts.unshift(data.post);
+            renderFeed();
+          } else if (data.type === 'telemetry') {
+            if (data.temp !== undefined) {
+              document.getElementById('socTemp').innerText = `${data.temp.toFixed(1)}°C`;
+            }
+          }
+        } catch (e) {}
+      };
+      ws.onclose = () => {
+        setTimeout(connectWebSocket, 3000);
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFeed();
+      loadJobs();
+      connectWebSocket();
+    });
+  </script>
+</body>
+</html>
